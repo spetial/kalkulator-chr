@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toyota C-HR PHEV – Kalkulator ładowania</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root,[data-theme="light"]{
+  --bg:#f5f6f8;--surface:#fff;--surface2:#f8f9fb;--offset:#eef0f4;--divider:#dde0e8;--border:#cdd0da;
+  --text:#1a1d26;--muted:#6b7080;--faint:#a8adb8;--primary:#eb0a1e;
+  --socket:#0066b2;--socket-h:#e0f0fc;--wallbox:#007a4c;--wallbox-h:#e0f5ed;
+  --radius-sm:.375rem;--radius-md:.625rem;--radius-lg:1rem;--radius-xl:1.25rem;
+  --shadow-sm:0 1px 3px rgba(10,15,30,.07);--shadow-md:0 4px 16px rgba(10,15,30,.09);
+  --body:'Inter',sans-serif;--display:'Instrument Serif',serif;
+  --xs:clamp(.75rem,.7rem + .25vw,.875rem);--sm:clamp(.875rem,.8rem + .35vw,1rem);
+  --base:clamp(1rem,.95rem + .25vw,1.125rem);--lg:clamp(1.125rem,1rem + .75vw,1.5rem);
+  --xl:clamp(1.5rem,1.2rem + 1.25vw,2.25rem);--xxl:clamp(2rem,1.2rem + 2.5vw,3rem);
+  --s1:.25rem;--s2:.5rem;--s3:.75rem;--s4:1rem;--s5:1.25rem;--s6:1.5rem;--s8:2rem;--s12:3rem;
+}
+[data-theme="dark"]{
+  --bg:#0f1016;--surface:#181a22;--surface2:#1e2028;--offset:#232630;--divider:#2c3040;--border:#363a4a;
+  --text:#e0e2ec;--muted:#8890a8;--faint:#545968;--primary:#ff3347;
+  --socket:#4499e0;--socket-h:#0d1f30;--wallbox:#2ecc88;--wallbox-h:#0a2418;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.3);--shadow-md:0 4px 16px rgba(0,0,0,.4);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased}
+body{min-height:100dvh;font-family:var(--body);font-size:var(--base);color:var(--text);background:var(--bg)}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none}
+.app{max-width:680px;margin:0 auto;padding:var(--s6) var(--s4) var(--s12)}
+.header{display:flex;align-items:center;justify-content:space-between;padding-bottom:var(--s5);margin-bottom:var(--s8);border-bottom:1px solid var(--divider)}
+.logo{display:flex;align-items:center;gap:var(--s3)}
+.logo-img{width:72px;height:auto;object-fit:contain}
+.title{display:flex;flex-direction:row;align-items:baseline;gap:var(--s3)}
+.title h1{font-family:var(--display);font-size:var(--lg);font-weight:400;line-height:1.15;white-space:nowrap}
+.title span{font-size:var(--xs);color:var(--muted);font-weight:500;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.theme{width:40px;height:40px;border-radius:999px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:var(--s6);box-shadow:var(--shadow-sm);margin-bottom:var(--s5)}
+.card-title{font-size:var(--sm);font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:var(--s5)}
+.row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:var(--s4)}
+.label{font-size:var(--base);font-weight:600}
+.pct{font-family:var(--display);font-size:var(--xl);color:var(--primary);line-height:1}
+.visual{height:48px;background:var(--offset);border-radius:var(--radius-md);overflow:hidden;margin-bottom:var(--s4);border:1px solid var(--border);position:relative}
+.fill{position:absolute;left:0;top:0;bottom:0;border-radius:calc(var(--radius-md) - 1px);transition:width .35s cubic-bezier(.16,1,.3,1),background .35s;display:flex;align-items:center;justify-content:flex-end;padding-right:var(--s3)}
+.fill span{font-size:var(--xs);font-weight:700;color:#fff;opacity:0;transition:opacity .25s;white-space:nowrap}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;background:var(--offset);border:1px solid var(--border);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--primary);border:3px solid var(--surface);box-shadow:0 2px 8px rgba(235,10,30,.35)}
+input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:var(--primary);border:3px solid var(--surface)}
+.ticks{display:flex;justify-content:space-between;padding:0 2px;margin-top:var(--s2)}
+.ticks span{font-size:var(--xs);color:var(--faint)}
+.num{display:flex;align-items:center;gap:var(--s3);margin-top:var(--s4);padding:var(--s3) var(--s4);background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-md)}
+.num label{font-size:var(--sm);color:var(--muted);flex:1}
+.num input[type=number]{width:84px;text-align:right;padding:var(--s2) var(--s3);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:var(--base);font-weight:600;outline:none}
+.num .unit{font-size:var(--sm);color:var(--muted)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--s4)}
+@media(max-width:480px){.grid{grid-template-columns:1fr}}
+.result{border-radius:var(--radius-lg);padding:var(--s5);border:1px solid var(--border);overflow:hidden;transition:transform 180ms ease,box-shadow 180ms ease}
+.result:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.result.socket{background:var(--socket-h);border-color:color-mix(in oklab,var(--socket) 30%,transparent)}
+.result.wallbox{background:var(--wallbox-h);border-color:color-mix(in oklab,var(--wallbox) 30%,transparent)}
+.head{display:flex;align-items:center;gap:var(--s2);margin-bottom:var(--s1)}
+.icon{width:32px;height:32px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:1rem}
+.socket .icon{background:color-mix(in oklab,var(--socket) 15%,transparent)}
+.wallbox .icon{background:color-mix(in oklab,var(--wallbox) 15%,transparent)}
+.result h3{font-size:var(--xs);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.socket h3{color:var(--socket)}
+.wallbox h3{color:var(--wallbox)}
+.time{font-family:var(--display);font-size:var(--xxl);line-height:1;color:var(--text);margin-bottom:var(--s1)}
+.sub{font-size:var(--xs);color:var(--muted);margin-bottom:var(--s3)}
+.line{display:flex;justify-content:space-between;font-size:var(--xs);padding:var(--s2) 0;border-top:1px solid color-mix(in oklab,var(--divider) 60%,transparent);color:var(--muted)}
+.line strong{color:var(--text)}
+.progress{margin-top:var(--s3);height:5px;background:var(--divider);border-radius:999px;overflow:hidden}
+.progress div{height:100%;border-radius:999px;transition:width .35s cubic-bezier(.16,1,.3,1)}
+.socket .progress div{background:var(--socket)}
+.wallbox .progress div{background:var(--wallbox)}
+.now-strip{margin-top:var(--s5);padding:var(--s4);background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg)}
+.now-title{font-size:var(--xs);font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:var(--s4);text-align:center}
+.now-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--s4)}
+@media(max-width:480px){.now-grid{grid-template-columns:1fr}}
+.now-box{border-radius:var(--radius-md);padding:var(--s4);border:1px solid var(--border);text-align:center}
+.now-box.socket{background:var(--socket-h);border-color:color-mix(in oklab,var(--socket) 30%,transparent)}
+.now-box.wallbox{background:var(--wallbox-h);border-color:color-mix(in oklab,var(--wallbox) 30%,transparent)}
+.now-label{font-size:var(--xs);font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:var(--s2)}
+.socket .now-label{color:var(--socket)}
+.wallbox .now-label{color:var(--wallbox)}
+.now-time{font-family:var(--display);font-size:var(--xl);color:var(--text);line-height:1;margin-bottom:var(--s1)}
+.now-sub{font-size:var(--xs);color:var(--muted)}
+.full{text-align:center;padding:var(--s8) var(--s4);font-family:var(--display);font-size:var(--xl);color:var(--wallbox)}
+.full .big{font-size:2.5rem;display:block;margin-bottom:var(--s3)}
+.full p{font-size:var(--base);font-family:var(--body);color:var(--muted);margin-top:var(--s2);max-width:38ch;margin-inline:auto}
+.time-row{display:flex;align-items:center;gap:var(--s3);margin-bottom:var(--s5);padding:var(--s4);background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-md)}
+.time-row label{font-size:var(--sm);color:var(--muted);flex:1}
+.pick{display:flex;align-items:center;gap:4px}
+.pick select{padding:var(--s2) var(--s3);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:var(--base);font-weight:700;color:var(--text);outline:none;cursor:pointer;appearance:none;text-align:center;min-width:52px}
+.pick select:focus{border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in oklab,var(--primary) 20%,transparent)}
+.sep{font-size:1.25rem;font-weight:700;color:var(--muted);line-height:1;padding:0 2px}
+.uhr{font-size:var(--sm);color:var(--muted)}
+.start{display:grid;grid-template-columns:1fr 1fr;gap:var(--s4)}
+@media(max-width:480px){.start{grid-template-columns:1fr}}
+.box{border-radius:var(--radius-lg);padding:var(--s5);border:1px solid var(--border);text-align:center}
+.box.socket{background:var(--socket-h);border-color:color-mix(in oklab,var(--socket) 30%,transparent)}
+.box.wallbox{background:var(--wallbox-h);border-color:color-mix(in oklab,var(--wallbox) 30%,transparent)}
+.sz{font-size:var(--xs);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:var(--s3)}
+.socket .sz{color:var(--socket)}
+.wallbox .sz{color:var(--wallbox)}
+.start-time{font-family:var(--display);font-size:var(--xl);color:var(--text);line-height:1;margin-bottom:var(--s2)}
+.start-sub{font-size:var(--xs);color:var(--muted)}
+.warn{font-size:var(--xs);color:var(--primary);font-weight:600;margin-top:var(--s2)}
+.coll-head{width:100%;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0;background:none;border:none;cursor:pointer;font-size:var(--sm);font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.coll-body{display:none;margin-top:var(--s5)}
+.chev{transition:transform .2s ease}
+.setting-row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);padding:var(--s3) 0;border-bottom:1px solid var(--divider)}
+.setting-row:last-child{border-bottom:none}
+.setting-label{flex:1;min-width:140px;font-size:var(--sm);color:var(--muted)}
+.setting-label strong{display:block;color:var(--text);font-weight:600}
+.setting-controls{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap}
+.setting-controls select{padding:var(--s2) var(--s3);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:var(--sm);font-weight:600;color:var(--text);outline:none;cursor:pointer;appearance:none}
+.setting-controls select:focus{border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in oklab,var(--primary) 20%,transparent)}
+.setting-controls input[type=number]{width:90px;padding:var(--s2) var(--s3);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:var(--sm);font-weight:600;outline:none;text-align:right}
+.setting-controls input[type=number]:focus{border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in oklab,var(--primary) 20%,transparent)}
+.setting-controls .unit{font-size:var(--xs);color:var(--muted)}
+.reset-btn{margin-top:var(--s4);padding:var(--s2) var(--s4);border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);font-size:var(--xs);font-weight:600;color:var(--muted);cursor:pointer}
+.reset-btn:hover{background:var(--offset);color:var(--text)}
+.table{width:100%;border-collapse:collapse;font-size:var(--sm)}
+.table tr{border-bottom:1px solid var(--divider)}
+.table tr:last-child{border-bottom:none}
+.table td{padding:var(--s3) var(--s2);color:var(--muted)}
+.table td:last-child{text-align:right;font-weight:600;color:var(--text)}
+.footer{margin-top:var(--s8);text-align:center;font-size:var(--xs);color:var(--faint);line-height:1.6}
+@media(max-width:480px){.app{padding:var(--s4) var(--s3) var(--s12)}.card{padding:var(--s5)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="logo">
+      <img class="logo-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Toyota_carlogo.svg/3840px-Toyota_carlogo.svg.png" alt="Toyota">
+      <div class="title"><h1>Kalkulator ładowania</h1><span>Toyota C-HR Plug-in Hybrid</span></div>
+    </div>
+    <button class="theme" id="themeBtn" aria-label="Zmień motyw">
+      <svg id="themeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Stan baterii</div>
+    <div class="row"><div class="label">Aktualny stan baterii (Toyota App)</div><div class="pct" id="pctText">50%</div></div>
+    <div class="visual"><div class="fill" id="fill"><span id="fillText">50%</span></div></div>
+    <input id="slider" type="range" min="0" max="100" value="50" step="1">
+    <div class="ticks"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+    <div class="num"><label for="numInput">Wpisz dokładną wartość</label><input id="numInput" type="number" min="0" max="100" value="50"><span class="unit">%</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Czas ładowania do 100%</div>
+    <div id="fullStatus" style="display:none">
+      <div class="full"><span class="big">⚡</span>Bateria jest w pełni naładowana!<p>Odepnij kabel i jedź elektrycznie!</p></div>
+    </div>
+    <div class="grid" id="resultsGrid">
+      <div class="result socket">
+        <div class="head"><div class="icon">🔌</div><h3>Gniazdko domowe</h3></div>
+        <div id="socketBadge">🔌 1.64 kW</div>
+        <div class="time" id="socketTime">—</div>
+        <div class="sub" id="socketSub">230 V · AC</div>
+        <div class="line"><span>Brakująca energia</span><strong id="missing1">—</strong></div>
+        <div class="line"><span>Moc ładowania</span><strong id="socketPower">—</strong></div>
+        <div class="progress"><div id="socketProg" style="width:50%"></div></div>
+      </div>
+      <div class="result wallbox">
+        <div class="head"><div class="icon">⚡</div><h3>Wallbox / Ładowarka</h3></div>
+        <div id="wallboxBadge">⚡ 5.0 kW</div>
+        <div class="time" id="wallboxTime">—</div>
+        <div class="sub" id="wallboxSub">Typ 2 · AC</div>
+        <div class="line"><span>Brakująca energia</span><strong id="missing2">—</strong></div>
+        <div class="line"><span>Moc ładowania</span><strong id="wallboxPower">—</strong></div>
+        <div class="progress"><div id="wallboxProg" style="width:50%"></div></div>
+      </div>
+    </div>
+    <div id="nowStrip" class="now-strip">
+      <div class="now-title">🕐 Gotowe o — jeśli zaczniesz ładować teraz</div>
+      <div class="now-grid">
+        <div class="now-box socket">
+          <div class="now-label">🔌 Gniazdko</div>
+          <div class="now-time" id="nowSocket">—</div>
+          <div class="now-sub">Godz.</div>
+        </div>
+        <div class="now-box wallbox">
+          <div class="now-label">⚡ Wallbox</div>
+          <div class="now-time" id="nowWallbox">—</div>
+          <div class="now-sub">Godz.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Oblicz godzinę startu</div>
+    <div class="time-row">
+      <label>Naładowane do pełna o</label>
+      <div class="pick"><select id="hour"></select><span class="sep">:</span><select id="minute"></select></div>
+      <span class="uhr">Godz.</span>
+    </div>
+    <div class="start">
+      <div class="box socket">
+        <div class="sz">🔌 Gniazdko</div>
+        <div class="start-time" id="startSocket">—</div>
+        <div class="start-sub">Start ładowania</div>
+        <div class="warn" id="warnSocket"></div>
+      </div>
+      <div class="box wallbox">
+        <div class="sz">⚡ Wallbox</div>
+        <div class="start-time" id="startWallbox">—</div>
+        <div class="start-sub">Start ładowania</div>
+        <div class="warn" id="warnWallbox"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <button class="coll-head" id="settingsBtn"><span>⚙️ Ustawienia ładowania</span><span class="chev" id="settingsChev">▾</span></button>
+    <div class="coll-body" id="settingsBody">
+      <div class="setting-row">
+        <div class="setting-label"><strong>🔌 Gniazdko domowe</strong><span>Wybierz moc ładowania</span></div>
+        <div class="setting-controls">
+          <select id="socketPreset">
+            <option value="custom">Własna wartość</option>
+            <option value="1.64" selected>Zmierzone · 1,64 kW</option>
+            <option value="1.38">6A · 1,38 kW</option>
+            <option value="1.84">8A · 1,84 kW</option>
+            <option value="2.3">10A · 2,3 kW</option>
+            <option value="3.68">16A · 3,68 kW</option>
+          </select>
+          <input type="number" id="socketKw" min="0.1" max="7.4" step="0.01" value="1.64">
+          <span class="unit">kW</span>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label"><strong>⚡ Wallbox / Ładowarka</strong><span>Wybierz moc ładowania</span></div>
+        <div class="setting-controls">
+          <select id="wallboxPreset">
+            <option value="custom">Własna wartość</option>
+            <option value="3.7">3,7 kW</option>
+            <option value="4.5">4,5 kW</option>
+            <option value="5.0" selected>Zmierzone · 5,0 kW</option>
+            <option value="6.6">6,6 kW (maks)</option>
+            <option value="7.4">7,4 kW</option>
+          </select>
+          <input type="number" id="wallboxKw" min="0.1" max="22" step="0.01" value="5.0">
+          <span class="unit">kW</span>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label"><strong>⚡ Sprawność (straty ładowania)</strong><span>Typowo 85–95%</span></div>
+        <div class="setting-controls">
+          <input type="number" id="efficiency" min="50" max="100" step="1" value="90">
+          <span class="unit">%</span>
+        </div>
+      </div>
+      <button class="reset-btn" id="resetBtn">↺ Przywróć wartości domyślne</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <button class="coll-head" id="detailsBtn"><span>Dane pojazdu</span><span class="chev" id="detailsChev">▾</span></button>
+    <div class="coll-body" id="detailsBody">
+      <table class="table">
+        <tr><td>Pojazd</td><td>Toyota C-HR Plug-in Hybrid (2.0 PHEV)</td></tr>
+        <tr><td>Całkowita pojemność (fizyczna)</td><td>13,6 kWh</td></tr>
+        <tr><td>Dostępne do jazdy EV</td><td>9,52 kWh (≈70%)</td></tr>
+        <tr><td>Rezerwa hybrydowa</td><td>≈4,08 kWh (≈30%)</td></tr>
+        <tr><td>Złącze ładowania</td><td>Typ 2 (Mennekes) · tylko AC</td></tr>
+        <tr><td>Szybkie ładowanie DC</td><td>Nieobsługiwane</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="footer">Czasy ładowania są orientacyjne. Rzeczywisty czas może się różnić w zależności od temperatury i napięcia sieci.</div>
+</div>
+
+<script>
+(function(){
+  const EV_KWH = 9.52;
+  const DEFAULTS = { socketKw: 1.64, wallboxKw: 5.0, efficiency: 90 };
+  let cfg = { socketKw: DEFAULTS.socketKw, wallboxKw: DEFAULTS.wallboxKw, efficiency: DEFAULTS.efficiency };
+  let pct = 50;
+
+  const root = document.documentElement;
+  let theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  root.setAttribute('data-theme', theme);
+  function setThemeIcon(){
+    document.getElementById('themeIcon').innerHTML = theme === 'dark'
+      ? '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>'
+      : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  }
+  setThemeIcon();
+  document.getElementById('themeBtn').addEventListener('click', () => {
+    theme = theme === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', theme);
+    setThemeIcon();
+  });
+
+  function initCollapsible(btnId, bodyId, chevId){
+    document.getElementById(btnId).addEventListener('click', () => {
+      const body = document.getElementById(bodyId);
+      const chev = document.getElementById(chevId);
+      const open = body.style.display === 'block';
+      body.style.display = open ? 'none' : 'block';
+      chev.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
+    });
+  }
+  initCollapsible('settingsBtn', 'settingsBody', 'settingsChev');
+  initCollapsible('detailsBtn',  'detailsBody',  'detailsChev');
+
+  const hour = document.getElementById('hour');
+  const minute = document.getElementById('minute');
+  for(let i=0;i<24;i++){const o=document.createElement('option');o.value=i;o.textContent=String(i).padStart(2,'0');if(i===7)o.selected=true;hour.appendChild(o)}
+  for(let i=0;i<60;i+=5){const o=document.createElement('option');o.value=i;o.textContent=String(i).padStart(2,'0');minute.appendChild(o)}
+  hour.addEventListener('change', updateStart);
+  minute.addEventListener('change', updateStart);
+
+  function readSettings(){
+    cfg.socketKw   = parseFloat(document.getElementById('socketKw').value)   || DEFAULTS.socketKw;
+    cfg.wallboxKw  = parseFloat(document.getElementById('wallboxKw').value)  || DEFAULTS.wallboxKw;
+    cfg.efficiency = parseFloat(document.getElementById('efficiency').value) || DEFAULTS.efficiency;
+    render();
+  }
+
+  document.getElementById('socketPreset').addEventListener('change', e => {
+    if(e.target.value !== 'custom'){ document.getElementById('socketKw').value = e.target.value; readSettings(); }
+  });
+  document.getElementById('wallboxPreset').addEventListener('change', e => {
+    if(e.target.value !== 'custom'){ document.getElementById('wallboxKw').value = e.target.value; readSettings(); }
+  });
+  document.getElementById('socketKw').addEventListener('input',  () => { document.getElementById('socketPreset').value  = 'custom'; readSettings(); });
+  document.getElementById('wallboxKw').addEventListener('input', () => { document.getElementById('wallboxPreset').value = 'custom'; readSettings(); });
+  document.getElementById('efficiency').addEventListener('input', readSettings);
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    document.getElementById('socketKw').value    = DEFAULTS.socketKw;
+    document.getElementById('wallboxKw').value   = DEFAULTS.wallboxKw;
+    document.getElementById('efficiency').value  = DEFAULTS.efficiency;
+    document.getElementById('socketPreset').value  = '1.64';
+    document.getElementById('wallboxPreset').value = '5.0';
+    cfg = {...DEFAULTS};
+    render();
+  });
+
+  function calcHours(missingKwh, powerKw, effPct){
+    return (missingKwh / (effPct/100)) / powerKw;
+  }
+  function fmt(h){
+    if(h<=0) return '0 min.';
+    const total=Math.round(h*60), H=Math.floor(total/60), M=total%60;
+    if(H===0) return M+' min.';
+    if(M===0) return H+' godz.';
+    return H+' godz. '+M+' min.';
+  }
+  function startTime(h, m, chargeH){
+    let mins = h*60 + m - Math.round(chargeH*60);
+    const prev = mins < 0;
+    if(prev) mins += 1440;
+    return { t: String(Math.floor(mins/60)).padStart(2,'0')+':'+String(mins%60).padStart(2,'0'), prev };
+  }
+  function finishNow(chargeH){
+    const now = new Date();
+    const totalMins = now.getHours()*60 + now.getMinutes() + Math.round(chargeH*60);
+    const mins = totalMins % 1440;
+    return String(Math.floor(mins/60)).padStart(2,'0') + ':' + String(mins%60).padStart(2,'0');
+  }
+
+  function updateStart(){
+    const h = +hour.value, m = +minute.value;
+    const missing = EV_KWH * (1 - pct/100);
+    if(missing < 0.01){
+      document.getElementById('startSocket').textContent  = 'Pełna ✓';
+      document.getElementById('startWallbox').textContent = 'Pełna ✓';
+      document.getElementById('warnSocket').textContent   = '';
+      document.getElementById('warnWallbox').textContent  = '';
+      return;
+    }
+    const sH = calcHours(missing, cfg.socketKw,  cfg.efficiency);
+    const wH = calcHours(missing, cfg.wallboxKw, cfg.efficiency);
+    const s = startTime(h, m, sH);
+    const w = startTime(h, m, wH);
+    document.getElementById('startSocket').textContent  = s.t + ' Godz.';
+    document.getElementById('startWallbox').textContent = w.t + ' Godz.';
+    document.getElementById('warnSocket').textContent   = s.prev ? '(poprzedni dzień)' : '';
+    document.getElementById('warnWallbox').textContent  = w.prev ? '(poprzedni dzień)' : '';
+  }
+
+  function render(){
+    const missing = EV_KWH * (1 - pct/100);
+    const full = missing < 0.01;
+    document.getElementById('pctText').textContent = pct+'%';
+    document.getElementById('slider').value         = pct;
+    document.getElementById('numInput').value       = pct;
+    const fill = document.getElementById('fill');
+    const fillText = document.getElementById('fillText');
+    fill.style.width = pct+'%';
+    fillText.style.opacity = pct >= 15 ? '1' : '0';
+    fillText.textContent = pct+'%';
+    if(pct<=15)      fill.style.background='linear-gradient(90deg,#c40818,#eb0a1e)';
+    else if(pct<=35) fill.style.background='linear-gradient(90deg,#eb0a1e,#e09a30)';
+    else if(pct<=75) fill.style.background='linear-gradient(90deg,#1a7a3e,#2ecc88)';
+    else             fill.style.background='linear-gradient(90deg,#1a7a3e,#0066b2)';
+    document.getElementById('fullStatus').style.display  = full ? 'block' : 'none';
+    document.getElementById('resultsGrid').style.display = full ? 'none'  : 'grid';
+    document.getElementById('nowStrip').style.display    = full ? 'none'  : 'block';
+    if(!full){
+      const sH = calcHours(missing, cfg.socketKw,  cfg.efficiency);
+      const wH = calcHours(missing, cfg.wallboxKw, cfg.efficiency);
+      document.getElementById('socketTime').textContent   = fmt(sH);
+      document.getElementById('wallboxTime').textContent  = fmt(wH);
+      document.getElementById('socketPower').textContent  = cfg.socketKw.toFixed(2)  + ' kW';
+      document.getElementById('wallboxPower').textContent = cfg.wallboxKw.toFixed(2) + ' kW';
+      document.getElementById('socketSub').textContent    = '230 V · AC · ' + cfg.socketKw.toFixed(2)  + ' kW';
+      document.getElementById('wallboxSub').textContent   = 'Typ 2 · AC · '  + cfg.wallboxKw.toFixed(2) + ' kW';
+      document.getElementById('socketBadge').textContent  = '🔌 ' + cfg.socketKw.toFixed(2)  + ' kW';
+      document.getElementById('wallboxBadge').textContent = '⚡ ' + cfg.wallboxKw.toFixed(2) + ' kW';
+      const ms = missing.toFixed(2)+' kWh';
+      document.getElementById('missing1').textContent = ms;
+      document.getElementById('missing2').textContent = ms;
+      document.getElementById('socketProg').style.width  = pct+'%';
+      document.getElementById('wallboxProg').style.width = pct+'%';
+      document.getElementById('nowSocket').textContent  = finishNow(sH);
+      document.getElementById('nowWallbox').textContent = finishNow(wH);
+    }
+    updateStart();
+  }
+
+  document.getElementById('slider').addEventListener('input', e => { pct = +e.target.value; render(); });
+  document.getElementById('numInput').addEventListener('input', e => { const v=parseInt(e.target.value); if(!isNaN(v)){pct=Math.max(0,Math.min(100,v));render();} });
+  document.getElementById('numInput').addEventListener('blur',  e => { const v=parseInt(e.target.value); pct=isNaN(v)?pct:Math.max(0,Math.min(100,v)); render(); });
+
+  setInterval(render, 60000);
+  render();
+})();
+</script>
+</body>
+</html>
